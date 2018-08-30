@@ -1,3 +1,4 @@
+# pylint: disable=W0212
 from eve_requests import EveClient, Settings
 
 
@@ -9,7 +10,7 @@ def test_client_session_is_set_at_startup():
 def test_client_default_settings_are_set_at_startup():
     client = EveClient()
     assert isinstance(client.settings, Settings)
-    assert client.settings.base_url is None
+    assert client.settings.base_url == "http://localhost:5000"
 
 
 def test_client_default_settings_can_be_overridden_at_startup():
@@ -21,7 +22,7 @@ def test_client_default_settings_can_be_overridden_at_startup():
 
 def test_resolve_url():
     client = EveClient()
-    assert client._resolve_url("endpoint") == "endpoint"
+    assert client._resolve_url("endpoint") == "http://localhost:5000/endpoint"
 
     client.settings.base_url = "//myapi"
     assert client._resolve_url("endpoint") == "//myapi/endpoint"
@@ -46,9 +47,9 @@ def test_resolve_ifmatch_header():
     client = EveClient()
     assert client._resolve_ifmatch_header({"key": "value"}) is None
 
-    header = client._resolve_ifmatch_header({"key": "value", "_etag": "hash"})
-    assert "If-Match" in header
-    assert header["If-Match"] == "hash"
+    headers = client._resolve_ifmatch_header({"key": "value", "_etag": "hash"})
+    assert "If-Match" in headers
+    assert headers["If-Match"] == "hash"
 
     client.settings.if_match = False
     assert client._resolve_ifmatch_header({"key": "value"}) is None
@@ -64,17 +65,6 @@ def test_resolve_ifmatch_header_with_custom_etag():
     assert client._resolve_ifmatch_header({"key": "value"}) is None
     assert client._resolve_ifmatch_header({"key": "value", "_etag": "hash"}) is None
 
-    header = client._resolve_ifmatch_header({"key": "value", "_custom_etag": "hash"})
-    assert "If-Match" in header
-    assert header["If-Match"] == "hash"
-
-
-def test_me():
-    settings = Settings()
-    # settings = Settings.from_url('https://myapi/swagger.json')
-    settings.base_url = "https://myapi"
-
-    client = EveClient(settings)
-
-    json = {"key1": "value1"}
-    r = client.post("url", json)
+    headers = client._resolve_ifmatch_header({"key": "value", "_custom_etag": "hash"})
+    assert "If-Match" in headers
+    assert headers["If-Match"] == "hash"

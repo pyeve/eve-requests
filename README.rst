@@ -8,7 +8,7 @@ Usage
 .. code-block:: python
 
     settings = Settings()
-    settings.base_url = "https://myapi"
+    settings.base_url = "https://eve-demo.herokuapp.com"
 
     # or let the client auto-configure itself by downloading and
     # parsing the remote OpenAPI specification (will need Eve-Swagger
@@ -17,8 +17,12 @@ Usage
 
     client = EveClient(settings)
 
-    json = {"key1": "value1"}
-    r = client.post("endpoint", json)
+    json = {"firstname": "john", "lastname": "doe"}
+    r = client.post("people", json)
+
+    # HTTP verbs return http://python-requests.org Request objects
+    print(r.status_code)    # 201
+    print(r.json())         # { ... }
 
 Current State
 -------------

@@ -1,9 +1,10 @@
 class Settings:
     def __init__(self):
         self.endpoints = {}
-        self.base_url = None
+        self.base_url = "http://localhost:5000"
         self.if_match = True
         self.etag = "_etag"
+        self.meta_fields = [self.etag]
 
     @staticmethod
     def from_url(url):
