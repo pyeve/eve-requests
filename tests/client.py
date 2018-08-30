@@ -45,26 +45,27 @@ def test_resolve_url():
 
 def test_resolve_ifmatch_header():
     client = EveClient()
-    assert client._resolve_ifmatch_header({"key": "value"}) is None
 
-    headers = client._resolve_ifmatch_header({"key": "value", "_etag": "hash"})
+    assert client._resolve_ifmatch_header(None) is None
+
+    headers = client._resolve_ifmatch_header("hash")
     assert "If-Match" in headers
     assert headers["If-Match"] == "hash"
 
     client.settings.if_match = False
-    assert client._resolve_ifmatch_header({"key": "value"}) is None
-    assert client._resolve_ifmatch_header({"key": "value", "_etag": "hash"}) is None
-
     assert client._resolve_ifmatch_header(None) is None
+    assert client._resolve_ifmatch_header("hash") is None
 
 
-def test_resolve_ifmatch_header_with_custom_etag():
+def test_purge_meta_fields():
     client = EveClient()
-    client.settings.etag = "_custom_etag"
+    payload = {meta_field: "value" for meta_field in client.settings.meta_fields}
+    payload["key"] = "value"
 
-    assert client._resolve_ifmatch_header({"key": "value"}) is None
-    assert client._resolve_ifmatch_header({"key": "value", "_etag": "hash"}) is None
+    challenge = client._purge_meta_fields(payload)
+    assert "key" in challenge
+    for field in client.settings.meta_fields:
+        assert field not in challenge
 
-    headers = client._resolve_ifmatch_header({"key": "value", "_custom_etag": "hash"})
-    assert "If-Match" in headers
-    assert headers["If-Match"] == "hash"
+    # original has not been affected
+    assert client.settings.meta_fields[0] in payload

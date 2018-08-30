@@ -14,20 +14,20 @@ class EveClient:
         else:
             self.settings = Settings()
 
-    def post(self, url_or_endpoint, json=None, **kwargs):
+    def post(self, url_or_endpoint, payload, **kwargs):
         url = self._resolve_url(url_or_endpoint)
-        return self.session.post(url, json=json, **kwargs)
+        return self.session.post(url, json=payload, **kwargs)
 
-    def put(self, url_or_endpoint, json=None, **kwargs):
+    def put(self, url_or_endpoint, payload, etag, **kwargs):
         url = self._resolve_url(url_or_endpoint)
-        headers = self._resolve_ifmatch_header(json)
-        json = self._purge_meta_fiels(json)
+        headers = self._resolve_ifmatch_header(etag)
+        json = self._purge_meta_fields(payload)
         return self.session.put(url, json=json, headers=headers, **kwargs)
 
-    def patch(self, url_or_endpoint, json=None, **kwargs):
+    def patch(self, url_or_endpoint, payload, etag, **kwargs):
         url = self._resolve_url(url_or_endpoint)
-        headers = self._resolve_ifmatch_header(json)
-        json = self._purge_meta_fiels(json)
+        headers = self._resolve_ifmatch_header(etag)
+        json = self._purge_meta_fields(payload)
         return self.session.patch(url, json=json, headers=headers, **kwargs)
 
     def delete(self, url_or_endpoint, etag, **kwargs):
@@ -42,21 +42,15 @@ class EveClient:
             endpoint = url_or_endpoint
         return urljoin(self.settings.base_url, endpoint)
 
-    def _resolve_ifmatch_header(self, json_or_etag):
+    def _resolve_ifmatch_header(self, etag):
         if not self.settings.if_match:
             return None
 
-        etag = None
-        if isinstance(json_or_etag, str):
-            etag = json_or_etag
-        elif self.settings.etag in json_or_etag:
-            etag = json_or_etag[self.settings.etag]
         return {"If-Match": etag} if etag else None
 
-    def _purge_meta_fiels(self, json):
-        for field in self.settings.meta_fields:
-            try:
-                del (json[field])
-            except ValueError:
-                pass
-        return json
+    def _purge_meta_fields(self, payload):
+        return {
+            key: value
+            for (key, value) in payload.items()
+            if key not in self.settings.meta_fields
+        }

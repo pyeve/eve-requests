@@ -10,11 +10,11 @@ Usage
     settings = Settings()
     settings.base_url = "https://eve-demo.herokuapp.com"
 
-    # or let the client auto-configure itself by downloading and
-    # parsing the remote OpenAPI specification (will need Eve-Swagger
-    # extension on the server). Currently raises NotImplemntedError.
+    # or let the settings auto-configure by downloading and parsing 
+    # the remote OpenAPI specification (needs Eve-Swagger extension 
+    # on the server). Currently raises NotImplemntedError.
     #
-    # settings = Settings.from_url('https://myapi/swagger.json')
+    # settings = Settings.from_url('https://myapi/docs/swagger.json')
 
     client = EveClient(settings)
 
@@ -24,6 +24,8 @@ Usage
     # HTTP verbs return http://python-requests.org Request objects
     print(r.status_code)    # 201
     print(r.json())         # { ... }
+
+    changes = {"firstname": "mike"}
 
 Current State
 -------------
