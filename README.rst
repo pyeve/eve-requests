@@ -13,12 +13,13 @@ Usage
     # or let the client auto-configure itself by downloading and
     # parsing the remote OpenAPI specification (will need Eve-Swagger
     # extension on the server). Currently raises NotImplemntedError.
+    #
     # settings = Settings.from_url('https://myapi/swagger.json')
 
     client = EveClient(settings)
 
     json = {"firstname": "john", "lastname": "doe"}
-    r = client.post("people", json)
+    r = client.post("people", json, auth=('user','pw'))
 
     # HTTP verbs return http://python-requests.org Request objects
     print(r.status_code)    # 201
