@@ -4,6 +4,10 @@ class Settings:
         self.base_url = "http://localhost:5000"
         self.if_match = True
         self.etag = "_etag"
+        self.status = "_status"
+        self.issues = "_issues"
+        self.items = "_items"
+        self.id_field = "_id"
         self.meta_fields = [self.etag]
 
     @staticmethod
