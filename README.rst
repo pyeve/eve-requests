@@ -25,8 +25,6 @@ Usage
     print(r.status_code)    # 201
     print(r.json())         # { ... }
 
-    changes = {"firstname": "mike"}
-
 Current State
 -------------
 (very) early development. Feedback and contributors welcome.
