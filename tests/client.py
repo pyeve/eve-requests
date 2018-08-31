@@ -38,7 +38,7 @@ def test_resolve_url():
     client.settings.base_url = None
     assert client._resolve_url(None) is None
 
-    # urlib.parse.urljoin ignores non-absolute url as base
+    # urlib.parse.urljoin ignores non-absolute urls as base
     client.settings.base_url = "myapi"
     assert client._resolve_url("endpoint") == "endpoint"
 
@@ -46,15 +46,28 @@ def test_resolve_url():
 def test_resolve_ifmatch_header():
     client = EveClient()
 
+    assert client._resolve_ifmatch_header() is None
     assert client._resolve_ifmatch_header(None) is None
+    assert client._resolve_ifmatch_header(None, None) is None
 
-    headers = client._resolve_ifmatch_header("hash")
-    assert "If-Match" in headers
+    headers = client._resolve_ifmatch_header({client.settings.etag: "hash"})
     assert headers["If-Match"] == "hash"
+
+    assert client._resolve_ifmatch_header({"key": "value"}) is None
+
+    headers = client._resolve_ifmatch_header(etag="etag")
+    assert headers["If-Match"] == "etag"
+
+    headers = client._resolve_ifmatch_header({client.settings.etag: "hash"}, "etag")
+    assert headers["If-Match"] == "etag"
 
     client.settings.if_match = False
     assert client._resolve_ifmatch_header(None) is None
-    assert client._resolve_ifmatch_header("hash") is None
+    assert client._resolve_ifmatch_header({client.settings.etag: "hash"}) is None
+    assert client._resolve_ifmatch_header(etag="hash") is None
+    assert (
+        client._resolve_ifmatch_header({client.settings.etag: "hash"}, "etag") is None
+    )
 
 
 def test_purge_meta_fields():

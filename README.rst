@@ -7,6 +7,8 @@ Usage
 
 .. code-block:: python
 
+    from eve_requests import EveClient, Settings
+
     settings = Settings()
     settings.base_url = "https://eve-demo.herokuapp.com"
 
@@ -17,11 +19,10 @@ Usage
     # settings = Settings.from_url('https://myapi/docs/swagger.json')
 
     client = EveClient(settings)
-
     json = {"firstname": "john", "lastname": "doe"}
+
     r = client.post("people", json, auth=('user','pw'))
 
-    # HTTP verbs return http://python-requests.org Request objects
     print(r.status_code)    # 201
     print(r.json())         # { ... }
 
