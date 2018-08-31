@@ -5,7 +5,7 @@ import requests
 from .server import Settings
 
 
-class Client(object):
+class Client:
     def __init__(self, settings=None):
         self.session = requests.Session()
 
