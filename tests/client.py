@@ -1,14 +1,14 @@
 # pylint: disable=W0212
-from eve_requests import EveClient, Settings
+from eve_requests import Client, Settings
 
 
 def test_client_session_is_set_at_startup():
-    client = EveClient()
+    client = Client()
     assert client.session is not None
 
 
 def test_client_default_settings_are_set_at_startup():
-    client = EveClient()
+    client = Client()
     assert isinstance(client.settings, Settings)
     assert client.settings.base_url == "http://localhost:5000"
 
@@ -16,12 +16,12 @@ def test_client_default_settings_are_set_at_startup():
 def test_client_default_settings_can_be_overridden_at_startup():
     settings = Settings()
     settings.base_url = "mybase"
-    client = EveClient(settings)
+    client = Client(settings)
     assert client.settings.base_url == "mybase"
 
 
 def test_resolve_url():
-    client = EveClient()
+    client = Client()
     assert client._resolve_url("endpoint") == "http://localhost:5000/endpoint"
 
     client.settings.base_url = "//myapi"
@@ -44,7 +44,7 @@ def test_resolve_url():
 
 
 def test_resolve_ifmatch_header():
-    client = EveClient()
+    client = Client()
 
     assert client._resolve_ifmatch_header() is None
     assert client._resolve_ifmatch_header(None) is None
@@ -71,7 +71,7 @@ def test_resolve_ifmatch_header():
 
 
 def test_purge_meta_fields():
-    client = EveClient()
+    client = Client()
     payload = {meta_field: "value" for meta_field in client.settings.meta_fields}
     payload["key"] = "value"
 
