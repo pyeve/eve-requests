@@ -1,4 +1,4 @@
-class Settings:
+class Settings(object):
     def __init__(self):
         self.endpoints = {}
         self.base_url = "http://localhost:5000"
