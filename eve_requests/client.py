@@ -1,3 +1,4 @@
+# pylint: disable=C0330
 from urllib.parse import urljoin
 from requests import Request
 
@@ -32,8 +33,7 @@ class Client:
     """
 
     def __init__(self, settings=None):
-        # TODO: session should probably be public
-        self._session = requests.Session()
+        self.session = requests.Session()
 
         if settings:
             #: Remote server settings. Make sure these are properly set before
@@ -143,8 +143,8 @@ class Client:
         }
 
     def _prepare_and_send_request(self, request):
-        request = self._session.prepare_request(request)
-        return self._session.send(request)
+        request = self.session.prepare_request(request)
+        return self.session.send(request)
 
     @classmethod
     def __build_request(cls, method, url, json=None, headers=None, **kwargs):

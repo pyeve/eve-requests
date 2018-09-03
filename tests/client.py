@@ -1,11 +1,12 @@
 # pylint: disable=W0212
-from eve_requests import Client, ServerSettings
 import pytest
+
+from eve_requests import Client, ServerSettings
 
 
 def test_client_session_is_set_at_startup():
     client = Client()
-    assert client._session is not None
+    assert client.session is not None
 
 
 def test_client_default_settings_are_set_at_startup():
@@ -191,7 +192,7 @@ def test_put_method():
 
     with pytest.raises(ValueError) as e:
         client._build_put_request("foo", {"key": "value"})
-        assert "unique id required" in (str(e))
+        assert "unique id required" in str(e)
 
 
 def test_patch_method():
@@ -221,9 +222,9 @@ def test_patch_method():
 
     with pytest.raises(ValueError) as e:
         client._build_patch_request("foo", {"key": "value"})
-        assert "unique id required" in (str(e))
+        assert "unique id required" in str(e)
 
-    # TODO: see PATCH todo
+    # TODO: see PUT todos
 
 
 def test_delete_method():
@@ -238,7 +239,7 @@ def test_delete_method():
 
     with pytest.raises(ValueError) as e:
         client._build_delete_request("foo", None, None)
-        assert "unique id required" in (str(e))
+        assert "unique id required" in str(e)
 
     # TODO: DELETE should probably also accept a payload, and sniff unique_id and etag off it
 
@@ -257,4 +258,3 @@ def test_get_method():
     assert req.url == "http://localhost:5000/foo"
     assert "If-None-Match" not in req.headers
     assert not req.auth
-
