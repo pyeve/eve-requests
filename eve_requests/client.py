@@ -74,7 +74,7 @@ class Client:
     def _build_put_request(
         self, url_or_endpoint, payload, unique_id=None, etag=None, **kwargs
     ):
-        url = self._resolve_url(url_or_endpoint, payload, unique_id)
+        url = self._resolve_url(url_or_endpoint, payload, unique_id, id_required=True)
         headers = self._resolve_ifmatch_header(payload, etag)
         json = self._purge_meta_fields(payload)
         return Client.__build_request("PUT", url, json=json, headers=headers, **kwargs)
@@ -82,7 +82,7 @@ class Client:
     def _build_patch_request(
         self, url_or_endpoint, payload, unique_id=None, etag=None, **kwargs
     ):
-        url = self._resolve_url(url_or_endpoint, payload, unique_id)
+        url = self._resolve_url(url_or_endpoint, payload, unique_id, id_required=True)
         headers = self._resolve_ifmatch_header(payload, etag)
         json = self._purge_meta_fields(payload)
         return Client.__build_request(
@@ -90,7 +90,7 @@ class Client:
         )
 
     def _build_delete_request(self, url_or_endpoint, etag, unique_id, **kwargs):
-        url = self._resolve_url(url_or_endpoint, unique_id=unique_id)
+        url = self._resolve_url(url_or_endpoint, unique_id=unique_id, id_required=True)
         headers = self._resolve_ifmatch_header(etag=etag)
         return Client.__build_request("DELETE", url, headers=headers, **kwargs)
 
@@ -99,15 +99,21 @@ class Client:
         headers = self._resolve_if_none_match_header(etag=etag)
         return Client.__build_request("GET", url, headers=headers, **kwargs)
 
-    def _resolve_url(self, url_or_endpoint, payload=None, unique_id=None):
+    def _resolve_url(
+        self, url_or_endpoint, payload=None, unique_id=None, id_required=False
+    ):
         if url_or_endpoint in self.server_settings.endpoints:
             endpoint = self.server_settings.endpoints[url_or_endpoint]
         else:
             endpoint = url_or_endpoint
+
         if unique_id:
             endpoint = "/".join([endpoint, unique_id])
         elif payload and self.server_settings.id_field in payload:
             endpoint = "/".join([endpoint, payload[self.server_settings.id_field]])
+        else:
+            if id_required:
+                raise ValueError("A unique id is required")
 
         return urljoin(self.server_settings.base_url, endpoint)
 

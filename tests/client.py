@@ -1,5 +1,6 @@
 # pylint: disable=W0212
 from eve_requests import Client, ServerSettings
+import pytest
 
 
 def test_client_session_is_set_at_startup():
@@ -188,12 +189,9 @@ def test_put_method():
     assert "If-Match" not in req.headers
     assert not req.auth
 
-    # TODO: missing unique_id (both in payload and arg) should raise exception
-    req = client._build_put_request("foo", {"key": "value"})
-    assert req.url == "http://localhost:5000/foo"
-    assert req.json["key"] == "value"
-    assert "If-Match" not in req.headers
-    assert not req.auth
+    with pytest.raises(ValueError) as e:
+        client._build_put_request("foo", {"key": "value"})
+        assert "unique id required" in (str(e))
 
 
 def test_patch_method():
@@ -221,7 +219,11 @@ def test_patch_method():
     assert req.headers["If-Match"] == "foo_etag"
     assert not req.auth
 
-    # TODO: see PUT todos
+    with pytest.raises(ValueError) as e:
+        client._build_patch_request("foo", {"key": "value"})
+        assert "unique id required" in (str(e))
+
+    # TODO: see PATCH todo
 
 
 def test_delete_method():
@@ -233,6 +235,10 @@ def test_delete_method():
     assert req.url == "http://localhost:5000/people/id"
     assert req.headers["If-Match"] == "etag"
     assert req.auth == set(["user", "pw"])
+
+    with pytest.raises(ValueError) as e:
+        client._build_delete_request("foo", None, None)
+        assert "unique id required" in (str(e))
 
     # TODO: DELETE should probably also accept a payload, and sniff unique_id and etag off it
 
