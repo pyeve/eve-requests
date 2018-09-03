@@ -14,10 +14,10 @@ with io.open("eve_requests/__init__.py", "rt", encoding="utf8") as f:
 INSTALL_REQUIRES = ["requests"]
 
 EXTRAS_REQUIRE = {
-    # "docs": ["sphinx", "alabaster", "sphinxcontrib-embedly"],
-    "tests": ["redis", "testfixtures", "pytest", "tox"]
+    "docs": ["sphinx", "alabaster"],
+    "tests": ["redis", "testfixtures", "pytest", "tox"],
 }
-EXTRAS_REQUIRE["dev"] = EXTRAS_REQUIRE["tests"]  # + EXTRAS_REQUIRE["docs"]
+EXTRAS_REQUIRE["dev"] = EXTRAS_REQUIRE["tests"] + EXTRAS_REQUIRE["docs"]
 
 setup(
     name="Eve-Requests",
