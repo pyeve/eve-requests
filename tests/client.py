@@ -140,3 +140,20 @@ def test_purge_meta_fields():
 
     # original has not been affected
     assert client.server_settings.meta_fields[0] in payload
+
+
+def test_GET():
+    client = Client()
+    client.server_settings.endpoints["test"] = "people"
+    req = client._build_GET_request("test", etag="etag", unique_id="id")
+    assert req.url == "http://localhost:5000/people/id"
+    assert req.headers["If-None-Match"] == "etag"
+
+
+def test_POST():
+    client = Client()
+    client.server_settings.endpoints["test"] = "people"
+    req = client._build_POST_request("test", {"key": "value"}, auth={"user", "pw"})
+    assert req.url == "http://localhost:5000/people"
+    assert req.auth == set(["user", "pw"])
+    assert req.json["key"] == "value"

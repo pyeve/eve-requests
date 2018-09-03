@@ -1,4 +1,5 @@
 from urllib.parse import urljoin
+from requests import Request
 
 import requests
 
@@ -43,30 +44,60 @@ class Client:
             self.server_settings = ServerSettings()
 
     def post(self, url_or_endpoint, payload, **kwargs):
-        url = self._resolve_url(url_or_endpoint)
-        return self._session.post(url, json=payload, **kwargs)
+        req = self._build_POST_request(url_or_endpoint, payload, **kwargs)
+        return self._prepare_and_send_request(req)
 
     def put(self, url_or_endpoint, payload, unique_id=None, etag=None, **kwargs):
-        url = self._resolve_url(url_or_endpoint, payload, unique_id)
-        headers = self._resolve_ifmatch_header(payload, etag)
-        json = self._purge_meta_fields(payload)
-        return self._session.put(url, json=json, headers=headers, **kwargs)
+        req = self._build_PUT_request(
+            url_or_endpoint, payload, unique_id, etag, **kwargs
+        )
+        return self._prepare_and_send_request(req)
 
     def patch(self, url_or_endpoint, payload, unique_id=None, etag=None, **kwargs):
+        req = self._build_PATCH_request(
+            url_or_endpoint, payload, unique_id, etag, **kwargs
+        )
+        return self._prepare_and_send_request(req)
+
+    def delete(self, url_or_endpoint, etag, unique_id=None, **kwargs):
+        req = self._build_DELETE_request(url_or_endpoint, etag, unique_id, **kwargs)
+        return self._prepare_and_send_request(req)
+
+    def get(self, url_or_endpoint, etag=None, unique_id=None, **kwargs):
+        req = self._build_GET_request(url_or_endpoint, etag, unique_id, **kwargs)
+        return self._prepare_and_send_request(req)
+
+    def _build_POST_request(self, url_or_endpoint, payload, **kwargs):
+        url = self._resolve_url(url_or_endpoint)
+        return Client.__build_request("POST", url, json=payload, **kwargs)
+
+    def _build_PUT_request(
+        self, url_or_endpoint, payload, unique_id=None, etag=None, **kwargs
+    ):
         url = self._resolve_url(url_or_endpoint, payload, unique_id)
         headers = self._resolve_ifmatch_header(payload, etag)
         json = self._purge_meta_fields(payload)
-        return self._session.patch(url, json=json, headers=headers, **kwargs)
+        return Client.__build_request("PUT", url, json=json, headers=headers, **kwargs)
 
-    def delete(self, url_or_endpoint, etag, unique_id=None, **kwargs):
+    def _build_PATCH_request(
+        self, url_or_endpoint, payload, unique_id=None, etag=None, **kwargs
+    ):
+        url = self._resolve_url(url_or_endpoint, payload, unique_id)
+        headers = self._resolve_ifmatch_header(payload, etag)
+        json = self._purge_meta_fields(payload)
+        return Client.__build_request(
+            "PATCH", url, json=json, headers=headers, **kwargs
+        )
+
+    def _build_DELETE_request(self, url_or_endpoint, etag, unique_id=None, **kwargs):
         url = self._resolve_url(url_or_endpoint, unique_id=unique_id)
         headers = self._resolve_ifmatch_header(etag=etag)
-        return self._session.delete(url, headers=headers, **kwargs)
+        return Client.__build_request("DELETE", url, headers=headers, **kwargs)
 
-    def get(self, url_or_endpoint, etag=None, unique_id=None, **kwargs):
+    def _build_GET_request(self, url_or_endpoint, etag=None, unique_id=None, **kwargs):
         url = self._resolve_url(url_or_endpoint, unique_id=unique_id)
         headers = self._resolve_if_none_match_header(etag=etag)
-        return self._session.get(url, headers=headers, **kwargs)
+        return Client.__build_request("GET", url, headers=headers, **kwargs)
 
     def _resolve_url(self, url_or_endpoint, payload=None, unique_id=None):
         if url_or_endpoint in self.server_settings.endpoints:
@@ -104,3 +135,12 @@ class Client:
             for (key, value) in payload.items()
             if key not in self.server_settings.meta_fields
         }
+
+    def _prepare_and_send_request(self, request):
+        request = self._session.prepare_request(request)
+        return self._session.send(request)
+
+    @classmethod
+    def __build_request(cls, method, url, json=None, headers=None, **kwargs):
+        return Request(method, url, json=json, headers=headers, **kwargs)
+
