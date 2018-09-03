@@ -19,7 +19,7 @@ class Client:
         >>> from eve_requests import Client, ServerSettings
         >>> settings = ServerSettings('https://myapi.com/)
         >>> client = Client(settings)
-        >>> client.post('people', {"name": "john doe"})
+        >>> client.post('contacts', {"name": "john doe"}, auth=('user', 'pw'))
         <Response [201]>
 
     .. _Eve:
@@ -63,6 +63,11 @@ class Client:
         headers = self._resolve_ifmatch_header(etag=etag)
         return self._session.delete(url, headers=headers, **kwargs)
 
+    def get(self, url_or_endpoint, etag=None, unique_id=None, **kwargs):
+        url = self._resolve_url(url_or_endpoint, unique_id=unique_id)
+        headers = self._resolve_if_none_match_header(etag=etag)
+        return self._session.get(url, headers=headers, **kwargs)
+
     def _resolve_url(self, url_or_endpoint, payload=None, unique_id=None):
         if url_or_endpoint in self.server_settings.endpoints:
             endpoint = self.server_settings.endpoints[url_or_endpoint]
@@ -75,18 +80,23 @@ class Client:
 
         return urljoin(self.server_settings.base_url, endpoint)
 
+    def _resolve_if_none_match_header(self, payload=None, etag=None):
+        return_value = self._resolve_etag(payload, etag)
+        return {"If-None-Match": return_value} if return_value else None
+
     def _resolve_ifmatch_header(self, payload=None, etag=None):
+        return_value = self._resolve_etag(payload, etag)
+        return {"If-Match": return_value} if return_value else None
+
+    def _resolve_etag(self, payload=None, etag=None):
         if not self.server_settings.if_match:
             return None
 
         if etag:
-            return_value = etag
-        elif payload:
-            return_value = payload.get(self.server_settings.etag)
-        else:
-            return_value = None
-
-        return {"If-Match": return_value} if return_value else None
+            return etag
+        if payload:
+            return payload.get(self.server_settings.etag)
+        return None
 
     def _purge_meta_fields(self, payload):
         return {

@@ -91,6 +91,43 @@ def test_resolve_ifmatch_header():
     )
 
 
+def test_resolve_if_none_match_header():
+    client = Client()
+
+    assert client._resolve_if_none_match_header() is None
+    assert client._resolve_if_none_match_header(None) is None
+    assert client._resolve_if_none_match_header(None, None) is None
+
+    headers = client._resolve_if_none_match_header(
+        {client.server_settings.etag: "hash"}
+    )
+    assert headers["If-None-Match"] == "hash"
+
+    assert client._resolve_if_none_match_header({"key": "value"}) is None
+
+    headers = client._resolve_if_none_match_header(etag="etag")
+    assert headers["If-None-Match"] == "etag"
+
+    headers = client._resolve_if_none_match_header(
+        {client.server_settings.etag: "hash"}, "etag"
+    )
+    assert headers["If-None-Match"] == "etag"
+
+    client.server_settings.if_match = False
+    assert client._resolve_if_none_match_header(None) is None
+    assert (
+        client._resolve_if_none_match_header({client.server_settings.etag: "hash"})
+        is None
+    )
+    assert client._resolve_if_none_match_header(etag="hash") is None
+    assert (
+        client._resolve_if_none_match_header(
+            {client.server_settings.etag: "hash"}, "etag"
+        )
+        is None
+    )
+
+
 def test_purge_meta_fields():
     client = Client()
     payload = {meta_field: "value" for meta_field in client.server_settings.meta_fields}
