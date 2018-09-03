@@ -142,18 +142,113 @@ def test_purge_meta_fields():
     assert client.server_settings.meta_fields[0] in payload
 
 
-def test_GET():
-    client = Client()
-    client.server_settings.endpoints["test"] = "people"
-    req = client._build_GET_request("test", etag="etag", unique_id="id")
-    assert req.url == "http://localhost:5000/people/id"
-    assert req.headers["If-None-Match"] == "etag"
-
-
 def test_POST():
     client = Client()
     client.server_settings.endpoints["test"] = "people"
     req = client._build_POST_request("test", {"key": "value"}, auth={"user", "pw"})
     assert req.url == "http://localhost:5000/people"
-    assert req.auth == set(["user", "pw"])
     assert req.json["key"] == "value"
+    assert req.auth == set(["user", "pw"])
+
+    req = client._build_POST_request("foo", {"key": "value"})
+    assert req.url == "http://localhost:5000/foo"
+    assert req.json["key"] == "value"
+    assert not req.auth
+
+
+def test_PUT():
+    client = Client()
+    client.server_settings.endpoints["test"] = "people"
+    req = client._build_PUT_request(
+        "test",
+        {
+            client.server_settings.id_field: "id",
+            client.server_settings.etag: "etag",
+            "key": "value",
+        },
+        auth={"user", "pw"},
+    )
+    assert req.url == "http://localhost:5000/people/id"
+    assert req.json["key"] == "value"
+    assert req.headers["If-Match"] == "etag"
+    assert req.auth == set(["user", "pw"])
+
+    req = client._build_PUT_request(
+        "foo", {"key": "value"}, unique_id="foo_id", etag="foo_etag"
+    )
+    assert req.url == "http://localhost:5000/foo/foo_id"
+    assert req.json["key"] == "value"
+    assert req.headers["If-Match"] == "foo_etag"
+    assert not req.auth
+
+    # TODO: if IF_MATCH is enabled, not providing the etag should raise exception
+    req = client._build_PUT_request("foo", {"key": "value"}, unique_id="id")
+    assert req.url == "http://localhost:5000/foo/id"
+    assert req.json["key"] == "value"
+    assert "If-Match" not in req.headers
+    assert not req.auth
+
+    # TODO: missing unique_id (both in payload and arg) should raise exception
+    req = client._build_PUT_request("foo", {"key": "value"})
+    assert req.url == "http://localhost:5000/foo"
+    assert req.json["key"] == "value"
+    assert "If-Match" not in req.headers
+    assert not req.auth
+
+
+def test_PATCH():
+    client = Client()
+    client.server_settings.endpoints["test"] = "people"
+    req = client._build_PATCH_request(
+        "test",
+        {
+            client.server_settings.id_field: "id",
+            client.server_settings.etag: "etag",
+            "key": "value",
+        },
+        auth={"user", "pw"},
+    )
+    assert req.url == "http://localhost:5000/people/id"
+    assert req.json["key"] == "value"
+    assert req.headers["If-Match"] == "etag"
+    assert req.auth == set(["user", "pw"])
+
+    req = client._build_PATCH_request(
+        "foo", {"key": "value"}, unique_id="foo_id", etag="foo_etag"
+    )
+    assert req.url == "http://localhost:5000/foo/foo_id"
+    assert req.json["key"] == "value"
+    assert req.headers["If-Match"] == "foo_etag"
+    assert not req.auth
+
+    # TODO: see PUT todos
+
+
+def test_DELETE():
+    client = Client()
+    client.server_settings.endpoints["test"] = "people"
+    req = client._build_DELETE_request(
+        "test", "etag", unique_id="id", auth={"user", "pw"}
+    )
+    assert req.url == "http://localhost:5000/people/id"
+    assert req.headers["If-Match"] == "etag"
+    assert req.auth == set(["user", "pw"])
+
+    # TODO: DELETE should probably also accept a payload, and sniff unique_id and etag off it
+
+
+def test_GET():
+    client = Client()
+    client.server_settings.endpoints["test"] = "people"
+    req = client._build_GET_request(
+        "test", etag="etag", unique_id="id", auth=("user", "pw")
+    )
+    assert req.url == "http://localhost:5000/people/id"
+    assert req.headers["If-None-Match"] == "etag"
+    assert req.auth == tuple(["user", "pw"])
+
+    req = client._build_GET_request("foo")
+    assert req.url == "http://localhost:5000/foo"
+    assert "If-None-Match" not in req.headers
+    assert not req.auth
+
