@@ -113,7 +113,7 @@ class Client:
             endpoint = "/".join([endpoint, payload[self.server_settings.id_field]])
         else:
             if id_required:
-                raise ValueError("A unique id is required")
+                raise ValueError("Unique id is required")
 
         return urljoin(self.server_settings.base_url, endpoint)
 
@@ -131,9 +131,10 @@ class Client:
 
         if etag:
             return etag
-        if payload:
-            return payload.get(self.server_settings.etag)
-        return None
+        if payload and self.server_settings.etag in payload:
+            return payload[self.server_settings.etag]
+
+        raise ValueError("ETag is required")
 
     def _purge_meta_fields(self, payload):
         return {

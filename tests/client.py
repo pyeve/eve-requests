@@ -66,14 +66,14 @@ def test_resolve_url():
 def test_resolve_ifmatch_header():
     client = Client()
 
-    assert client._resolve_ifmatch_header() is None
-    assert client._resolve_ifmatch_header(None) is None
-    assert client._resolve_ifmatch_header(None, None) is None
+    with pytest.raises(ValueError, message="ETag is required"):
+        client._resolve_ifmatch_header()
+        client._resolve_ifmatch_header(None)
+        client._resolve_ifmatch_header(None, None)
+        assert client._resolve_ifmatch_header({"key": "value"}) is None
 
     headers = client._resolve_ifmatch_header({client.server_settings.etag: "hash"})
     assert headers["If-Match"] == "hash"
-
-    assert client._resolve_ifmatch_header({"key": "value"}) is None
 
     headers = client._resolve_ifmatch_header(etag="etag")
     assert headers["If-Match"] == "etag"
@@ -84,7 +84,9 @@ def test_resolve_ifmatch_header():
     assert headers["If-Match"] == "etag"
 
     client.server_settings.if_match = False
+    assert client._resolve_ifmatch_header() is None
     assert client._resolve_ifmatch_header(None) is None
+    assert client._resolve_ifmatch_header(None, None) is None
     assert client._resolve_ifmatch_header({client.server_settings.etag: "hash"}) is None
     assert client._resolve_ifmatch_header(etag="hash") is None
     assert (
@@ -96,16 +98,15 @@ def test_resolve_ifmatch_header():
 def test_resolve_if_none_match_header():
     client = Client()
 
-    assert client._resolve_if_none_match_header() is None
-    assert client._resolve_if_none_match_header(None) is None
-    assert client._resolve_if_none_match_header(None, None) is None
+    with pytest.raises(ValueError, message="ETag is required"):
+        assert client._resolve_if_none_match_header()
+        assert client._resolve_if_none_match_header(None)
+        assert client._resolve_if_none_match_header(None, None)
 
     headers = client._resolve_if_none_match_header(
         {client.server_settings.etag: "hash"}
     )
     assert headers["If-None-Match"] == "hash"
-
-    assert client._resolve_if_none_match_header({"key": "value"}) is None
 
     headers = client._resolve_if_none_match_header(etag="etag")
     assert headers["If-None-Match"] == "etag"
@@ -116,7 +117,9 @@ def test_resolve_if_none_match_header():
     assert headers["If-None-Match"] == "etag"
 
     client.server_settings.if_match = False
+    assert client._resolve_if_none_match_header() is None
     assert client._resolve_if_none_match_header(None) is None
+    assert client._resolve_if_none_match_header(None, None) is None
     assert (
         client._resolve_if_none_match_header({client.server_settings.etag: "hash"})
         is None
@@ -183,16 +186,11 @@ def test_put_method():
     assert req.headers["If-Match"] == "foo_etag"
     assert not req.auth
 
-    # TODO: if IF_MATCH is enabled, not providing the etag should raise exception
-    req = client._build_put_request("foo", {"key": "value"}, unique_id="id")
-    assert req.url == "http://localhost:5000/foo/id"
-    assert req.json["key"] == "value"
-    assert "If-Match" not in req.headers
-    assert not req.auth
+    with pytest.raises(ValueError, message="ETag is required"):
+        client._build_put_request("foo", {"key": "value"}, unique_id="id")
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValueError, message="Unique id is required"):
         client._build_put_request("foo", {"key": "value"})
-        assert "unique id required" in str(e)
 
 
 def test_patch_method():
@@ -220,11 +218,11 @@ def test_patch_method():
     assert req.headers["If-Match"] == "foo_etag"
     assert not req.auth
 
-    with pytest.raises(ValueError) as e:
-        client._build_patch_request("foo", {"key": "value"})
-        assert "unique id required" in str(e)
+    with pytest.raises(ValueError, message="ETag is required"):
+        client._build_put_request("foo", {"key": "value"}, unique_id="id")
 
-    # TODO: see PUT todos
+    with pytest.raises(ValueError, message="Unique id is required"):
+        client._build_patch_request("foo", {"key": "value"})
 
 
 def test_delete_method():
@@ -254,6 +252,10 @@ def test_get_method():
     assert req.headers["If-None-Match"] == "etag"
     assert req.auth == tuple(["user", "pw"])
 
+    with pytest.raises(ValueError, message="ETag is required"):
+        req = client._build_get_request("foo")
+    
+    client.server_settings.if_match = False
     req = client._build_get_request("foo")
     assert req.url == "http://localhost:5000/foo"
     assert "If-None-Match" not in req.headers
