@@ -2,11 +2,11 @@
 
 import collections
 
-from eve_requests import ServerSettings
+from eve_requests import Settings
 
 
 def test_settings_defaults():
-    settings = ServerSettings()
+    settings = Settings()
 
     assert isinstance(settings.endpoints, collections.Mapping)
     assert len(settings.endpoints) == 0

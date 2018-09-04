@@ -4,7 +4,7 @@ from requests import Request
 
 import requests
 
-from .server import ServerSettings
+from .server import Settings
 
 
 class Client:
@@ -18,8 +18,8 @@ class Client:
     in a significant performance increase.
 
     Basic Usage::
-        >>> from eve_requests import Client, ServerSettings
-        >>> settings = ServerSettings('https://myapi.com/)
+        >>> from eve_requests import Client, Settings
+        >>> settings = Settings('https://myapi.com/)
         >>> client = Client(settings)
         >>> client.post('contacts', {"name": "john doe"}, auth=('user', 'pw'))
         <Response [201]>
@@ -39,9 +39,9 @@ class Client:
             #: Remote server settings. Make sure these are properly set before
             #: invoking any of the read and write methods.
             #: Defaults to a new instance of :class:`ServerSettings`.
-            self.server_settings = settings
+            self.settings = settings
         else:
-            self.server_settings = ServerSettings()
+            self.settings = Settings()
 
     def post(self, url_or_endpoint, payload, **kwargs):
         req = self._build_post_request(url_or_endpoint, payload, **kwargs)
@@ -106,20 +106,20 @@ class Client:
     def _resolve_url(
         self, url_or_endpoint, payload=None, unique_id=None, id_required=False
     ):
-        if url_or_endpoint in self.server_settings.endpoints:
-            endpoint = self.server_settings.endpoints[url_or_endpoint]
+        if url_or_endpoint in self.settings.endpoints:
+            endpoint = self.settings.endpoints[url_or_endpoint]
         else:
             endpoint = url_or_endpoint
 
         if unique_id:
             endpoint = "/".join([endpoint, unique_id])
-        elif payload and self.server_settings.id_field in payload:
-            endpoint = "/".join([endpoint, payload[self.server_settings.id_field]])
+        elif payload and self.settings.id_field in payload:
+            endpoint = "/".join([endpoint, payload[self.settings.id_field]])
         else:
             if id_required:
                 raise ValueError("Unique id is required")
 
-        return urljoin(self.server_settings.base_url, endpoint)
+        return urljoin(self.settings.base_url, endpoint)
 
     def _resolve_if_none_match_header(self, payload=None, etag=None):
         return_value = self._resolve_etag(payload, etag)
@@ -130,13 +130,13 @@ class Client:
         return {"If-Match": return_value} if return_value else None
 
     def _resolve_etag(self, payload=None, etag=None):
-        if not self.server_settings.if_match:
+        if not self.settings.if_match:
             return None
 
         if etag:
             return etag
-        if payload and self.server_settings.etag in payload:
-            return payload[self.server_settings.etag]
+        if payload and self.settings.etag in payload:
+            return payload[self.settings.etag]
 
         raise ValueError("ETag is required")
 
@@ -144,7 +144,7 @@ class Client:
         return {
             key: value
             for (key, value) in payload.items()
-            if key not in self.server_settings.meta_fields
+            if key not in self.settings.meta_fields
         }
 
     def _prepare_and_send_request(self, request):

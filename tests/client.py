@@ -1,7 +1,7 @@
 # pylint: disable=W0212
 import pytest
 
-from eve_requests import Client, ServerSettings
+from eve_requests import Client, Settings
 
 
 def test_client_session_is_set_at_startup():
@@ -11,25 +11,25 @@ def test_client_session_is_set_at_startup():
 
 def test_client_default_settings_are_set_at_startup():
     client = Client()
-    assert isinstance(client.server_settings, ServerSettings)
-    assert client.server_settings.base_url == "http://localhost:5000"
+    assert isinstance(client.settings, Settings)
+    assert client.settings.base_url == "http://localhost:5000"
 
 
 def test_client_default_settings_can_be_overridden_at_startup():
-    settings = ServerSettings()
+    settings = Settings()
     settings.base_url = "mybase"
     client = Client(settings)
-    assert client.server_settings.base_url == "mybase"
+    assert client.settings.base_url == "mybase"
 
 
 def test_resolve_url():
     client = Client()
     assert client._resolve_url("endpoint") == "http://localhost:5000/endpoint"
 
-    client.server_settings.base_url = "//myapi"
+    client.settings.base_url = "//myapi"
     assert client._resolve_url("endpoint") == "//myapi/endpoint"
 
-    client.server_settings.base_url = "https://myapi"
+    client.settings.base_url = "https://myapi"
     assert client._resolve_url("endpoint") == "https://myapi/endpoint"
 
     assert (
@@ -39,27 +39,27 @@ def test_resolve_url():
     # unique_id takes precedence over the payload
     assert (
         client._resolve_url(
-            "endpoint", {client.server_settings.id_field: "payload_id"}, "id"
+            "endpoint", {client.settings.id_field: "payload_id"}, "id"
         )
         == "https://myapi/endpoint/id"
     )
 
-    client.server_settings.endpoints["contacts"] = "people"
+    client.settings.endpoints["contacts"] = "people"
     assert client._resolve_url("contacts") == "https://myapi/people"
 
     assert client._resolve_url(None) == "https://myapi"
 
     assert (
-        client._resolve_url("contacts", {client.server_settings.id_field: "id"})
+        client._resolve_url("contacts", {client.settings.id_field: "id"})
         == "https://myapi/people/id"
     )
     assert client._resolve_url("contacts", {"key": "value"}) == "https://myapi/people"
 
-    client.server_settings.base_url = None
+    client.settings.base_url = None
     assert client._resolve_url(None) is None
 
     # urlib.parse.urljoin ignores non-absolute urls as base
-    client.server_settings.base_url = "myapi"
+    client.settings.base_url = "myapi"
     assert client._resolve_url("endpoint") == "endpoint"
 
 
@@ -72,25 +72,25 @@ def test_resolve_ifmatch_header():
         client._resolve_ifmatch_header(None, None)
         assert client._resolve_ifmatch_header({"key": "value"}) is None
 
-    headers = client._resolve_ifmatch_header({client.server_settings.etag: "hash"})
+    headers = client._resolve_ifmatch_header({client.settings.etag: "hash"})
     assert headers["If-Match"] == "hash"
 
     headers = client._resolve_ifmatch_header(etag="etag")
     assert headers["If-Match"] == "etag"
 
     headers = client._resolve_ifmatch_header(
-        {client.server_settings.etag: "hash"}, "etag"
+        {client.settings.etag: "hash"}, "etag"
     )
     assert headers["If-Match"] == "etag"
 
-    client.server_settings.if_match = False
+    client.settings.if_match = False
     assert client._resolve_ifmatch_header() is None
     assert client._resolve_ifmatch_header(None) is None
     assert client._resolve_ifmatch_header(None, None) is None
-    assert client._resolve_ifmatch_header({client.server_settings.etag: "hash"}) is None
+    assert client._resolve_ifmatch_header({client.settings.etag: "hash"}) is None
     assert client._resolve_ifmatch_header(etag="hash") is None
     assert (
-        client._resolve_ifmatch_header({client.server_settings.etag: "hash"}, "etag")
+        client._resolve_ifmatch_header({client.settings.etag: "hash"}, "etag")
         is None
     )
 
@@ -104,7 +104,7 @@ def test_resolve_if_none_match_header():
         assert client._resolve_if_none_match_header(None, None)
 
     headers = client._resolve_if_none_match_header(
-        {client.server_settings.etag: "hash"}
+        {client.settings.etag: "hash"}
     )
     assert headers["If-None-Match"] == "hash"
 
@@ -112,22 +112,22 @@ def test_resolve_if_none_match_header():
     assert headers["If-None-Match"] == "etag"
 
     headers = client._resolve_if_none_match_header(
-        {client.server_settings.etag: "hash"}, "etag"
+        {client.settings.etag: "hash"}, "etag"
     )
     assert headers["If-None-Match"] == "etag"
 
-    client.server_settings.if_match = False
+    client.settings.if_match = False
     assert client._resolve_if_none_match_header() is None
     assert client._resolve_if_none_match_header(None) is None
     assert client._resolve_if_none_match_header(None, None) is None
     assert (
-        client._resolve_if_none_match_header({client.server_settings.etag: "hash"})
+        client._resolve_if_none_match_header({client.settings.etag: "hash"})
         is None
     )
     assert client._resolve_if_none_match_header(etag="hash") is None
     assert (
         client._resolve_if_none_match_header(
-            {client.server_settings.etag: "hash"}, "etag"
+            {client.settings.etag: "hash"}, "etag"
         )
         is None
     )
@@ -135,21 +135,21 @@ def test_resolve_if_none_match_header():
 
 def test_purge_meta_fields():
     client = Client()
-    payload = {meta_field: "value" for meta_field in client.server_settings.meta_fields}
+    payload = {meta_field: "value" for meta_field in client.settings.meta_fields}
     payload["key"] = "value"
 
     challenge = client._purge_meta_fields(payload)
     assert "key" in challenge
-    for field in client.server_settings.meta_fields:
+    for field in client.settings.meta_fields:
         assert field not in challenge
 
     # original has not been affected
-    assert client.server_settings.meta_fields[0] in payload
+    assert client.settings.meta_fields[0] in payload
 
 
 def test_post_method():
     client = Client()
-    client.server_settings.endpoints["test"] = "people"
+    client.settings.endpoints["test"] = "people"
     req = client._build_post_request("test", {"key": "value"}, auth={"user", "pw"})
     assert req.url == "http://localhost:5000/people"
     assert req.json["key"] == "value"
@@ -163,12 +163,12 @@ def test_post_method():
 
 def test_put_method():
     client = Client()
-    client.server_settings.endpoints["test"] = "people"
+    client.settings.endpoints["test"] = "people"
     req = client._build_put_request(
         "test",
         {
-            client.server_settings.id_field: "id",
-            client.server_settings.etag: "etag",
+            client.settings.id_field: "id",
+            client.settings.etag: "etag",
             "key": "value",
         },
         auth={"user", "pw"},
@@ -195,12 +195,12 @@ def test_put_method():
 
 def test_patch_method():
     client = Client()
-    client.server_settings.endpoints["test"] = "people"
+    client.settings.endpoints["test"] = "people"
     req = client._build_patch_request(
         "test",
         {
-            client.server_settings.id_field: "id",
-            client.server_settings.etag: "etag",
+            client.settings.id_field: "id",
+            client.settings.etag: "etag",
             "key": "value",
         },
         auth={"user", "pw"},
@@ -227,18 +227,24 @@ def test_patch_method():
 
 def test_delete_method():
     client = Client()
-    client.server_settings.endpoints["test"] = "people"
+    client.settings.endpoints["test"] = "people"
     req = client._build_delete_request("test", None, "id", "etag", auth={"user", "pw"})
     assert req.url == "http://localhost:5000/people/id"
     assert req.headers["If-Match"] == "etag"
     assert req.auth == set(["user", "pw"])
 
-    req = client._build_delete_request("test", {client.server_settings.etag: "etag"}, "id", auth={"user", "pw"})
+    req = client._build_delete_request(
+        "test", {client.settings.etag: "etag"}, "id", auth={"user", "pw"}
+    )
     assert req.url == "http://localhost:5000/people/id"
     assert req.headers["If-Match"] == "etag"
     assert req.auth == set(["user", "pw"])
 
-    req = client._build_delete_request("test", {client.server_settings.etag: "etag", client.server_settings.id_field: "id"}, auth={"user", "pw"})
+    req = client._build_delete_request(
+        "test",
+        {client.settings.etag: "etag", client.settings.id_field: "id"},
+        auth={"user", "pw"},
+    )
     assert req.url == "http://localhost:5000/people/id"
     assert req.headers["If-Match"] == "etag"
     assert req.auth == set(["user", "pw"])
@@ -256,12 +262,12 @@ def test_delete_method():
         client._build_delete_request("foo", None, None, "etag")
 
     with pytest.raises(ValueError, message="Unique id is required"):
-        client._build_delete_request("foo", {client.server_settings.etag: "etag"})
+        client._build_delete_request("foo", {client.settings.etag: "etag"})
 
 
 def test_get_method():
     client = Client()
-    client.server_settings.endpoints["test"] = "people"
+    client.settings.endpoints["test"] = "people"
     req = client._build_get_request(
         "test", etag="etag", unique_id="id", auth=("user", "pw")
     )
@@ -272,7 +278,7 @@ def test_get_method():
     with pytest.raises(ValueError, message="ETag is required"):
         req = client._build_get_request("foo")
 
-    client.server_settings.if_match = False
+    client.settings.if_match = False
     req = client._build_get_request("foo")
     assert req.url == "http://localhost:5000/foo"
     assert "If-None-Match" not in req.headers

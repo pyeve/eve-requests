@@ -1,4 +1,4 @@
-class ServerSettings:
+class Settings:
     def __init__(self, base_url="http://localhost:5000"):
         self.endpoints = {}
         self.base_url = base_url
@@ -14,7 +14,12 @@ class ServerSettings:
 
     @staticmethod
     def from_url(url):
-        """ Downloads and parses the remote service OpenAPI (Swagger) 
-        documentation, then returns a matching :class:`ServerSettings` instance.
+        """ Loads configuration from a remote OpenAPI (Swagger) endpoint.
+        """
+        raise NotImplementedError()
+
+    @staticmethod
+    def from_file(url):
+        """ Loads configuration from a Eve settings file.
         """
         raise NotImplementedError()
