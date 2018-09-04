@@ -89,9 +89,13 @@ class Client:
             "PATCH", url, json=json, headers=headers, **kwargs
         )
 
-    def _build_delete_request(self, url_or_endpoint, etag, unique_id, **kwargs):
-        url = self._resolve_url(url_or_endpoint, unique_id=unique_id, id_required=True)
-        headers = self._resolve_ifmatch_header(etag=etag)
+    def _build_delete_request(
+        self, url_or_endpoint, payload=None, unique_id=None, etag=None, **kwargs
+    ):
+        url = self._resolve_url(
+            url_or_endpoint, payload=payload, unique_id=unique_id, id_required=True
+        )
+        headers = self._resolve_ifmatch_header(payload=payload, etag=etag)
         return Client.__build_request("DELETE", url, headers=headers, **kwargs)
 
     def _build_get_request(self, url_or_endpoint, etag=None, unique_id=None, **kwargs):

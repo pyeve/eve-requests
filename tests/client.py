@@ -228,18 +228,35 @@ def test_patch_method():
 def test_delete_method():
     client = Client()
     client.server_settings.endpoints["test"] = "people"
-    req = client._build_delete_request(
-        "test", "etag", unique_id="id", auth={"user", "pw"}
-    )
+    req = client._build_delete_request("test", None, "id", "etag", auth={"user", "pw"})
     assert req.url == "http://localhost:5000/people/id"
     assert req.headers["If-Match"] == "etag"
     assert req.auth == set(["user", "pw"])
 
-    with pytest.raises(ValueError) as e:
-        client._build_delete_request("foo", None, None)
-        assert "unique id required" in str(e)
+    req = client._build_delete_request("test", {client.server_settings.etag: "etag"}, "id", auth={"user", "pw"})
+    assert req.url == "http://localhost:5000/people/id"
+    assert req.headers["If-Match"] == "etag"
+    assert req.auth == set(["user", "pw"])
 
-    # TODO: DELETE should probably also accept a payload, and sniff unique_id and etag off it
+    req = client._build_delete_request("test", {client.server_settings.etag: "etag", client.server_settings.id_field: "id"}, auth={"user", "pw"})
+    assert req.url == "http://localhost:5000/people/id"
+    assert req.headers["If-Match"] == "etag"
+    assert req.auth == set(["user", "pw"])
+
+    with pytest.raises(ValueError, message="ETag is required"):
+        client._build_delete_request("foo", None, None)
+
+    with pytest.raises(ValueError, message="ETag is required"):
+        client._build_delete_request("foo", None, "id")
+
+    with pytest.raises(ValueError, message="ETag is required"):
+        client._build_delete_request("foo", {"key": "value"}, "id")
+
+    with pytest.raises(ValueError, message="Unique id is required"):
+        client._build_delete_request("foo", None, None, "etag")
+
+    with pytest.raises(ValueError, message="Unique id is required"):
+        client._build_delete_request("foo", {client.server_settings.etag: "etag"})
 
 
 def test_get_method():
@@ -254,7 +271,7 @@ def test_get_method():
 
     with pytest.raises(ValueError, message="ETag is required"):
         req = client._build_get_request("foo")
-    
+
     client.server_settings.if_match = False
     req = client._build_get_request("foo")
     assert req.url == "http://localhost:5000/foo"
