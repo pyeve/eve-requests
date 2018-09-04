@@ -36,9 +36,9 @@ class Client:
         self.session = requests.Session()
 
         if settings:
-            #: Remote server settings. Make sure these are properly set before
+            #: Remote service settings. Make sure these are properly set before
             #: invoking any of the read and write methods.
-            #: Defaults to a new instance of :class:`ServerSettings`.
+            #: Defaults to a new instance of :class:`Settings`.
             self.settings = settings
         else:
             self.settings = Settings()
