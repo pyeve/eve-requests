@@ -2,16 +2,34 @@ class Settings:
     """
     Holds the settings of a remote Eve_ service which are relevant to a :class:`Client` instance.
 
-    Basic Usage::
+    Basic Usage:
+
         >>> from eve_requests Client, Settings
         >>> settings = Settings('https://myapi.com/)
         >>> settings.if_match = False
         >>> settings.etag = "_my_custom_etag"
         >>> client = Client(settings)
+    
+    Initialize from a Swagger/OpenAPI documentation endpoint. 
+    Needs Eve-Swagger_ to be active on the service (not implemented yet):
 
+        >>> from eve_requests Client, Settings
+        >>> settings = Settings.from_url("https://myapi.com/api-docs/settings.json")
+        >>> client = Client(settings)
+    
+    Alternatively, and assuming you have it available, you can initialize directly 
+    from the Eve settings file (not implemented yet):
+
+        >>> from eve_requests Client, Settings
+        >>> settings = Settings.from_file("settings.py")
+        >>> client = Client(settings)
+    
     .. _Eve:
        http://python-eve.org/
     
+    .. _Eve-Swagger:
+       http://github.com/pyeve/eve-swagger
+
     :param base_url: (optional) remote service entry point. 
     """
 
@@ -28,7 +46,7 @@ class Settings:
         #: Remote service base url or entry point (the home page).
         self.base_url = base_url
 
-        #: Wether `concurrency control <http://python-eve.org/features.html#data-integrity-and-concurrency-control>`_ is enabled on the service.
+        #: Wether concurrency control is enabled on the service.
         #: Should match the remote ``IF_MATCH`` setting. Defaults to
         #:``True``.
         self.if_match = True
@@ -72,11 +90,19 @@ class Settings:
     @staticmethod
     def from_url(url):
         """ Loads configuration from a remote OpenAPI (Swagger) endpoint and
-        returns it as a new :class:`Settings` instance. """
+        returns it as a new :class:`Settings` instance. 
+        
+        Note: 
+            not implemented
+        """
         raise NotImplementedError()
 
     @staticmethod
     def from_file(url):
         """ Loads configuration from standard Eve settings file and returns
-        it as a new :class:`Settings` instance. """
+        it as a new :class:`Settings` instance. 
+        
+        Note: 
+            not implemented
+        """
         raise NotImplementedError()
