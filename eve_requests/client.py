@@ -18,6 +18,7 @@ class Client:
     in a significant performance increase.
 
     Basic Usage::
+
         >>> from eve_requests import Client, Settings
         >>> settings = Settings('https://myapi.com/)
         >>> client = Client(settings)
@@ -68,12 +69,14 @@ class Client:
         return self._prepare_and_send_request(req)
 
     def _build_post_request(self, url_or_endpoint, payload, **kwargs):
+        self.__validate()
         url = self._resolve_url(url_or_endpoint)
         return Client.__build_request("POST", url, json=payload, **kwargs)
 
     def _build_put_request(
         self, url_or_endpoint, payload, unique_id=None, etag=None, **kwargs
     ):
+        self.__validate()
         url = self._resolve_url(url_or_endpoint, payload, unique_id, id_required=True)
         headers = self._resolve_ifmatch_header(payload, etag)
         json = self._purge_meta_fields(payload)
@@ -82,6 +85,7 @@ class Client:
     def _build_patch_request(
         self, url_or_endpoint, payload, unique_id=None, etag=None, **kwargs
     ):
+        self.__validate()
         url = self._resolve_url(url_or_endpoint, payload, unique_id, id_required=True)
         headers = self._resolve_ifmatch_header(payload, etag)
         json = self._purge_meta_fields(payload)
@@ -92,6 +96,7 @@ class Client:
     def _build_delete_request(
         self, url_or_endpoint, payload=None, unique_id=None, etag=None, **kwargs
     ):
+        self.__validate()
         url = self._resolve_url(
             url_or_endpoint, payload=payload, unique_id=unique_id, id_required=True
         )
@@ -99,6 +104,7 @@ class Client:
         return Client.__build_request("DELETE", url, headers=headers, **kwargs)
 
     def _build_get_request(self, url_or_endpoint, etag=None, unique_id=None, **kwargs):
+        self.__validate()
         url = self._resolve_url(url_or_endpoint, unique_id=unique_id)
         headers = self._resolve_if_none_match_header(etag=etag)
         return Client.__build_request("GET", url, headers=headers, **kwargs)
@@ -150,6 +156,10 @@ class Client:
     def _prepare_and_send_request(self, request):
         request = self.session.prepare_request(request)
         return self.session.send(request)
+
+    def __validate(self):
+        if not self.settings:
+            raise ValueError("Settings are required")
 
     @classmethod
     def __build_request(cls, method, url, json=None, headers=None, **kwargs):

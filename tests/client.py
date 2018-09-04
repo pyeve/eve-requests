@@ -251,17 +251,11 @@ def test_delete_method():
 
     with pytest.raises(ValueError, message="ETag is required"):
         client._build_delete_request("foo", None, None)
-
-    with pytest.raises(ValueError, message="ETag is required"):
         client._build_delete_request("foo", None, "id")
-
-    with pytest.raises(ValueError, message="ETag is required"):
         client._build_delete_request("foo", {"key": "value"}, "id")
 
     with pytest.raises(ValueError, message="Unique id is required"):
         client._build_delete_request("foo", None, None, "etag")
-
-    with pytest.raises(ValueError, message="Unique id is required"):
         client._build_delete_request("foo", {client.settings.etag: "etag"})
 
 
@@ -283,3 +277,14 @@ def test_get_method():
     assert req.url == "http://localhost:5000/foo"
     assert "If-None-Match" not in req.headers
     assert not req.auth
+
+def test_validate():
+    client = Client()
+    client.settings = None
+
+    with pytest.raises(ValueError, message="Settings are required"):
+        client.get("foo")
+        client.post("foo", {})
+        client.patch("foo", {})
+        client.put("foo", {})
+        client.delete("foo", "etag", "id")
