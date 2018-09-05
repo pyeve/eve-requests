@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Eve-Requests's documentation!
-========================================
+Welcome to Eve-Requests
+========================
 
 .. toctree::
    :maxdepth: 2

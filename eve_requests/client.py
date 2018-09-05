@@ -45,26 +45,127 @@ class Client:
             self.settings = Settings()
 
     def post(self, url_or_endpoint, payload, **kwargs):
+        """Sends a POST request.
+
+        :param url_or_endpoint: Either a valid key from the
+            :obj:`Settings.endpoints` dict, or the target URL.
+        :param payload: JSON data to send as the body of the request.
+        :param \*\*kwargs: Optional arguments that :obj:`requests.Request`
+            takes.
+        :returns: The :class:`requests.Response` object, which contains a 
+            server’s response to an HTTP request.
+        
+        :raises ValueError: If :any:`settings` is not set.
+        """
         req = self._build_post_request(url_or_endpoint, payload, **kwargs)
         return self._prepare_and_send_request(req)
 
     def put(self, url_or_endpoint, payload, unique_id=None, etag=None, **kwargs):
+        """Sends a PUT request.
+
+        :param url_or_endpoint: Either a valid key from the
+            :obj:`Settings.endpoints` dict, or the target URL.
+        :param payload: JSON data to send as the body of the request. If the
+            JSON contains any :any:`Settings.meta_fields`, these will be
+            stripped before the request is sent over to the remote service.
+        :param unique_id: Optional id of the document being replaced on the
+            remote service. If omitted, the id will be inferred from the
+            payload.
+        :param etag: Optional document ETag. If omitted, the ETag will be
+            inferred from the payload.
+        :param \*\*kwargs: Optional arguments that :obj:`requests.Request`
+            takes.
+        :returns: The :class:`requests.Response` object, which contains a 
+            server’s response to an HTTP request.
+        
+        :raises ValueError: If the unique id is missing.
+        :raises ValueError: If ETag is missing and :any:`Settings.if_match` is 
+            enabled.
+        :raises ValueError: If :any:`settings` is not set.
+        """
         req = self._build_put_request(
             url_or_endpoint, payload, unique_id, etag, **kwargs
         )
         return self._prepare_and_send_request(req)
 
     def patch(self, url_or_endpoint, payload, unique_id=None, etag=None, **kwargs):
+        """Sends a PATCH request.
+
+        :param url_or_endpoint: Either a valid key from the
+            :obj:`Settings.endpoints` dict, or the target URL.
+        :param payload: JSON data to send as the body of the request. If the
+            JSON contains any :any:`Settings.meta_fields`, these will be
+            stripped before the request is sent over to the remote service.
+        :param unique_id: Optional id of the document being updated on the
+            remote service. If omitted, the id will be inferred from the
+            payload.
+        :param etag: Optional document ETag. If omitted, the ETag will be
+            inferred from the payload.
+        :param \*\*kwargs: Optional arguments that :obj:`requests.Request`
+            takes.
+
+        :returns: The :class:`requests.Response` object, which contains a 
+            server’s response to an HTTP request.
+        
+        :raises ValueError: If the unique id is missing.
+        :raises ValueError: If ETag is missing and :any:`Settings.if_match` is 
+            enabled.
+        :raises ValueError: If :any:`settings` is not set.
+        """
         req = self._build_patch_request(
             url_or_endpoint, payload, unique_id, etag, **kwargs
         )
         return self._prepare_and_send_request(req)
 
-    def delete(self, url_or_endpoint, etag, unique_id, **kwargs):
-        req = self._build_delete_request(url_or_endpoint, etag, unique_id, **kwargs)
+    def delete(self, url_or_endpoint, etag, unique_id, payload=None, **kwargs):
+        """Sends a DELETE request.
+
+        :param url_or_endpoint: Either a valid key from the
+            :obj:`Settings.endpoints` dict, or the target URL.
+        :param unique_id: Optional id of the document being deleted on the
+            remote service. If omitted, the id will be inferred from the
+            payload.
+        :param etag: Optional document ETag. If omitted, the ETag will be
+            inferred from the payload.
+        :param payload: Optional JSON data used to infer document id and ETag
+            when they are not provided as arguments.
+        :param \*\*kwargs: Optional arguments that :obj:`requests.Request`
+            takes.
+
+        :returns: The :class:`requests.Response` object, which contains a 
+            server’s response to an HTTP request.
+        
+        :raises ValueError: If the unique id is missing.
+        :raises ValueError: If ETag is missing and :any:`Settings.if_match`
+            is enabled.
+        :raises ValueError: If :any:`settings` is not set.
+        """
+        req = self._build_delete_request(
+            url_or_endpoint, payload, etag, unique_id, **kwargs
+        )
         return self._prepare_and_send_request(req)
 
     def get(self, url_or_endpoint, etag=None, unique_id=None, **kwargs):
+        """Sends a GET request.
+
+        :param url_or_endpoint: Either a valid key from the
+            :obj:`Settings.endpoints` dict, or the target URL.
+        :param etag: Optional document ETag. If present, a `If-None-Match`
+            header with the etag will be included with the request.
+        :param unique_id: Optional id of the document being retrieved from the
+            remote service. 
+        :param \*\*kwargs: Optional arguments that :obj:`requests.Request`
+            takes.
+
+        :returns: The :class:`requests.Response` object, which contains a 
+            server’s response to an HTTP request.
+        
+        :raises ValueError: If ETag is missing and :any:`Settings.if_match` is 
+            enabled.
+        :raises ValueError: If :any:`settings` is not set.
+        """
+        # TODO: support a payload argument to infer etag and id if they are not
+        # provided as arguments.
         req = self._build_get_request(url_or_endpoint, etag, unique_id, **kwargs)
         return self._prepare_and_send_request(req)
 
