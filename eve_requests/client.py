@@ -1,4 +1,4 @@
-# pylint: disable=C0330
+# pylint: disable=C0330,W1401
 from urllib.parse import urljoin
 from requests import Request
 
