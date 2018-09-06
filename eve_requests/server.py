@@ -80,7 +80,17 @@ class Settings:
         #: setting. Defaults to ``_items``.
         self.items = "_items"
 
-        self._meta_fields = [self.etag, self.created, self.updated, self.id_field]
+        #: Allows to customize the links field. Should match the remote ``LINKS``
+        #: setting`. Defaults to ``_links``.
+        self.links = "_links"
+
+        self._meta_fields = [
+            self.etag,
+            self.created,
+            self.updated,
+            self.id_field,
+            self.links,
+        ]
 
     @property
     def meta_fields(self):

@@ -39,9 +39,36 @@ Now that the client is ready let's download the documents available at the
     200
     >>> r.json()
     {'_items': [{'_id': '5b89b1b091a5d0000495f54e', 'lastname': 'Green', ... }
-    
-.. _Eve:
-    http://python-eve.org/
+
+As you might have noticed, the ``get`` method returns a plain
+:class:`requests.Response` object. Let's say that we want to update one of
+the documents we just downloaded.
+
+    >>> document = r.json()['_items'][0]
+    >>> document['firstname']
+    Mike
+    >>> document['firstname'] = 'John'
+    >>> client.patch('people', document)
+    200
+
+Now things start to look interesting. Even if ``document`` contains all the
+standard Eve meta fields (``_updated``, ``_created``, ...) we don't need to
+strip them out. Moreover, we passed
+*people* as the endpoint, whereas we generally have to hit the specific
+document endpoint (*people/5b89b1b091a5d0000495f54e*). Last but not least, we
+need to pass an ``If-Match`` header with the document ETag (unless disabled
+on the server). Here we are not doing that.
+
+All these nuisances are taken care of by the client. It infers the document id
+and Etag from the payload, then strips the meta fields out of it, builds the
+necessary headers (like ``If-Match``, if required) and finally sends the
+PATCH request to the server.
+
+If you were using the vanilla ``patch`` method from the Request library,
+all of this should have been hard-coded by you.
+
+
+.. _Eve: http://python-eve.org/
 
 .. _Requests:
     http://python-requests.org/
