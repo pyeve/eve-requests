@@ -213,7 +213,10 @@ class Client:
     ):
         self.__validate()
         url = self._resolve_url(url_or_endpoint, payload=payload, unique_id=unique_id)
-        headers = self._resolve_if_none_match_header(etag=etag, payload=payload)
+        if payload or etag:
+            headers = self._resolve_if_none_match_header(etag=etag, payload=payload)
+        else:
+            headers = None
         return Client.__build_request("GET", url, headers=headers, **kwargs)
 
     def _resolve_url(

@@ -242,6 +242,10 @@ def test_delete_method():
 def test_get_method():
     client = Client()
     client.settings.endpoints["test"] = "people"
+
+    req = client._build_get_request("test")
+    assert req.url == "http://localhost:5000/people"
+
     req = client._build_get_request(
         "test", etag="etag", unique_id="id", auth=("user", "pw")
     )
@@ -264,7 +268,7 @@ def test_get_method():
     assert req.headers["If-None-Match"] == "this_wins"
 
     with pytest.raises(ValueError, message="ETag is required"):
-        req = client._build_get_request("foo")
+        req = client._build_get_request("foo", payload={"key": "value"})
 
     client.settings.if_match = False
     req = client._build_get_request("foo")
