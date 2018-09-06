@@ -38,9 +38,7 @@ def test_resolve_url():
 
     # unique_id takes precedence over the payload
     assert (
-        client._resolve_url(
-            "endpoint", {client.settings.id_field: "payload_id"}, "id"
-        )
+        client._resolve_url("endpoint", {client.settings.id_field: "payload_id"}, "id")
         == "https://myapi/endpoint/id"
     )
 
@@ -78,9 +76,7 @@ def test_resolve_ifmatch_header():
     headers = client._resolve_ifmatch_header(etag="etag")
     assert headers["If-Match"] == "etag"
 
-    headers = client._resolve_ifmatch_header(
-        {client.settings.etag: "hash"}, "etag"
-    )
+    headers = client._resolve_ifmatch_header({client.settings.etag: "hash"}, "etag")
     assert headers["If-Match"] == "etag"
 
     client.settings.if_match = False
@@ -90,8 +86,7 @@ def test_resolve_ifmatch_header():
     assert client._resolve_ifmatch_header({client.settings.etag: "hash"}) is None
     assert client._resolve_ifmatch_header(etag="hash") is None
     assert (
-        client._resolve_ifmatch_header({client.settings.etag: "hash"}, "etag")
-        is None
+        client._resolve_ifmatch_header({client.settings.etag: "hash"}, "etag") is None
     )
 
 
@@ -103,9 +98,7 @@ def test_resolve_if_none_match_header():
         assert client._resolve_if_none_match_header(None)
         assert client._resolve_if_none_match_header(None, None)
 
-    headers = client._resolve_if_none_match_header(
-        {client.settings.etag: "hash"}
-    )
+    headers = client._resolve_if_none_match_header({client.settings.etag: "hash"})
     assert headers["If-None-Match"] == "hash"
 
     headers = client._resolve_if_none_match_header(etag="etag")
@@ -120,15 +113,10 @@ def test_resolve_if_none_match_header():
     assert client._resolve_if_none_match_header() is None
     assert client._resolve_if_none_match_header(None) is None
     assert client._resolve_if_none_match_header(None, None) is None
-    assert (
-        client._resolve_if_none_match_header({client.settings.etag: "hash"})
-        is None
-    )
+    assert client._resolve_if_none_match_header({client.settings.etag: "hash"}) is None
     assert client._resolve_if_none_match_header(etag="hash") is None
     assert (
-        client._resolve_if_none_match_header(
-            {client.settings.etag: "hash"}, "etag"
-        )
+        client._resolve_if_none_match_header({client.settings.etag: "hash"}, "etag")
         is None
     )
 
@@ -166,11 +154,7 @@ def test_put_method():
     client.settings.endpoints["test"] = "people"
     req = client._build_put_request(
         "test",
-        {
-            client.settings.id_field: "id",
-            client.settings.etag: "etag",
-            "key": "value",
-        },
+        {client.settings.id_field: "id", client.settings.etag: "etag", "key": "value"},
         auth={"user", "pw"},
     )
     assert req.url == "http://localhost:5000/people/id"
@@ -198,11 +182,7 @@ def test_patch_method():
     client.settings.endpoints["test"] = "people"
     req = client._build_patch_request(
         "test",
-        {
-            client.settings.id_field: "id",
-            client.settings.etag: "etag",
-            "key": "value",
-        },
+        {client.settings.id_field: "id", client.settings.etag: "etag", "key": "value"},
         auth={"user", "pw"},
     )
     assert req.url == "http://localhost:5000/people/id"
@@ -269,6 +249,20 @@ def test_get_method():
     assert req.headers["If-None-Match"] == "etag"
     assert req.auth == tuple(["user", "pw"])
 
+    req = client._build_get_request(
+        "foo", payload={client.settings.id_field: "id", client.settings.etag: "etag"}
+    )
+    assert req.url == "http://localhost:5000/foo/id"
+    assert req.headers["If-None-Match"] == "etag"
+
+    req = client._build_get_request(
+        "foo",
+        payload={client.settings.id_field: "id", client.settings.etag: "etag"},
+        etag="this_wins",
+    )
+    assert req.url == "http://localhost:5000/foo/id"
+    assert req.headers["If-None-Match"] == "this_wins"
+
     with pytest.raises(ValueError, message="ETag is required"):
         req = client._build_get_request("foo")
 
@@ -277,6 +271,12 @@ def test_get_method():
     assert req.url == "http://localhost:5000/foo"
     assert "If-None-Match" not in req.headers
     assert not req.auth
+
+    req = client._build_get_request(
+        "foo", payload={client.settings.id_field: "id", client.settings.etag: "etag"}
+    )
+    assert "If-None-Match" not in req.headers
+
 
 def test_validate():
     client = Client()

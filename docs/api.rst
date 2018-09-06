@@ -6,5 +6,3 @@ Developer Interface
 
 .. autoclass:: eve_requests.Settings
     :members:
-
-

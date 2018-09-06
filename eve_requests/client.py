@@ -34,6 +34,8 @@ class Client:
     """
 
     def __init__(self, settings=None):
+        #: Instance of :class:`requests.Session` used internally to perform
+        #: HTTP requests.
         self.session = requests.Session()
 
         if settings:
@@ -145,7 +147,7 @@ class Client:
         )
         return self._prepare_and_send_request(req)
 
-    def get(self, url_or_endpoint, etag=None, unique_id=None, **kwargs):
+    def get(self, url_or_endpoint, etag=None, unique_id=None, payload=None, **kwargs):
         """Sends a GET request.
 
         :param url_or_endpoint: Either a valid key from the
@@ -154,6 +156,8 @@ class Client:
             header with the etag will be included with the request.
         :param unique_id: Optional id of the document being retrieved from the
             remote service. 
+        :param payload: Optional JSON data used to infer document id and ETag
+            when they are not provided as arguments. 
         :param \*\*kwargs: Optional arguments that :obj:`requests.Request`
             takes.
 
@@ -164,9 +168,9 @@ class Client:
             enabled.
         :raises ValueError: If :any:`settings` is not set.
         """
-        # TODO: support a payload argument to infer etag and id if they are not
-        # provided as arguments.
-        req = self._build_get_request(url_or_endpoint, etag, unique_id, **kwargs)
+        req = self._build_get_request(
+            url_or_endpoint, etag, unique_id, payload, **kwargs
+        )
         return self._prepare_and_send_request(req)
 
     def _build_post_request(self, url_or_endpoint, payload, **kwargs):
@@ -204,10 +208,12 @@ class Client:
         headers = self._resolve_ifmatch_header(payload=payload, etag=etag)
         return Client.__build_request("DELETE", url, headers=headers, **kwargs)
 
-    def _build_get_request(self, url_or_endpoint, etag=None, unique_id=None, **kwargs):
+    def _build_get_request(
+        self, url_or_endpoint, etag=None, unique_id=None, payload=None, **kwargs
+    ):
         self.__validate()
-        url = self._resolve_url(url_or_endpoint, unique_id=unique_id)
-        headers = self._resolve_if_none_match_header(etag=etag)
+        url = self._resolve_url(url_or_endpoint, payload=payload, unique_id=unique_id)
+        headers = self._resolve_if_none_match_header(etag=etag, payload=payload)
         return Client.__build_request("GET", url, headers=headers, **kwargs)
 
     def _resolve_url(
