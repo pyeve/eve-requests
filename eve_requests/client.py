@@ -46,11 +46,11 @@ class Client:
         else:
             self.settings = Settings()
 
-    def post(self, url_or_endpoint, payload, **kwargs):
+    def post(self, endpoint, payload, **kwargs):
         """Sends a POST request.
 
-        :param url_or_endpoint: Either a valid key from the
-            :obj:`Settings.endpoints` dict, or the target URL.
+        :param endpoint: Target endpoint relative to the base URL of the
+            remote service.
         :param payload: JSON data to send as the body of the request.
         :param \*\*kwargs: Optional arguments that :obj:`requests.Request`
             takes.
@@ -59,14 +59,14 @@ class Client:
         
         :raises ValueError: If :any:`settings` is not set.
         """
-        req = self._build_post_request(url_or_endpoint, payload, **kwargs)
+        req = self._build_post_request(endpoint, payload, **kwargs)
         return self._prepare_and_send_request(req)
 
-    def put(self, url_or_endpoint, payload, unique_id=None, etag=None, **kwargs):
+    def put(self, endpoint, payload, unique_id=None, etag=None, **kwargs):
         """Sends a PUT request.
 
-        :param url_or_endpoint: Either a valid key from the
-            :obj:`Settings.endpoints` dict, or the target URL.
+        :param endpoint: Target endpoint relative to the base URL of the
+            remote service.
         :param payload: JSON data to send as the body of the request. If the
             JSON contains any :any:`Settings.meta_fields`, these will be
             stripped before the request is sent over to the remote service.
@@ -85,16 +85,14 @@ class Client:
             enabled.
         :raises ValueError: If :any:`settings` is not set.
         """
-        req = self._build_put_request(
-            url_or_endpoint, payload, unique_id, etag, **kwargs
-        )
+        req = self._build_put_request(endpoint, payload, unique_id, etag, **kwargs)
         return self._prepare_and_send_request(req)
 
-    def patch(self, url_or_endpoint, payload, unique_id=None, etag=None, **kwargs):
+    def patch(self, endpoint, payload, unique_id=None, etag=None, **kwargs):
         """Sends a PATCH request.
 
-        :param url_or_endpoint: Either a valid key from the
-            :obj:`Settings.endpoints` dict, or the target URL.
+        :param endpoint: Target endpoint relative to the base URL of the
+            remote service.
         :param payload: JSON data to send as the body of the request. If the
             JSON contains any :any:`Settings.meta_fields`, these will be
             stripped before the request is sent over to the remote service.
@@ -114,16 +112,14 @@ class Client:
             enabled.
         :raises ValueError: If :any:`settings` is not set.
         """
-        req = self._build_patch_request(
-            url_or_endpoint, payload, unique_id, etag, **kwargs
-        )
+        req = self._build_patch_request(endpoint, payload, unique_id, etag, **kwargs)
         return self._prepare_and_send_request(req)
 
-    def delete(self, url_or_endpoint, etag, unique_id, payload=None, **kwargs):
+    def delete(self, endpoint, etag, unique_id, payload=None, **kwargs):
         """Sends a DELETE request.
 
-        :param url_or_endpoint: Either a valid key from the
-            :obj:`Settings.endpoints` dict, or the target URL.
+        :param endpoint: Target endpoint relative to the base URL of the
+            remote service.
         :param unique_id: Optional id of the document being deleted on the
             remote service. If omitted, the id will be inferred from the
             payload.
@@ -142,16 +138,14 @@ class Client:
             is enabled.
         :raises ValueError: If :any:`settings` is not set.
         """
-        req = self._build_delete_request(
-            url_or_endpoint, payload, etag, unique_id, **kwargs
-        )
+        req = self._build_delete_request(endpoint, payload, etag, unique_id, **kwargs)
         return self._prepare_and_send_request(req)
 
-    def get(self, url_or_endpoint, etag=None, unique_id=None, payload=None, **kwargs):
+    def get(self, endpoint, etag=None, unique_id=None, payload=None, **kwargs):
         """Sends a GET request.
 
-        :param url_or_endpoint: Either a valid key from the
-            :obj:`Settings.endpoints` dict, or the target URL.
+        :param endpoint: Target endpoint relative to the base URL of the
+            remote service.
         :param etag: Optional document ETag. If present, a `If-None-Match`
             header with the etag will be included with the request.
         :param unique_id: Optional id of the document being retrieved from the
@@ -168,30 +162,28 @@ class Client:
             enabled.
         :raises ValueError: If :any:`settings` is not set.
         """
-        req = self._build_get_request(
-            url_or_endpoint, etag, unique_id, payload, **kwargs
-        )
+        req = self._build_get_request(endpoint, etag, unique_id, payload, **kwargs)
         return self._prepare_and_send_request(req)
 
-    def _build_post_request(self, url_or_endpoint, payload, **kwargs):
+    def _build_post_request(self, endpoint, payload, **kwargs):
         self.__validate()
-        url = self._resolve_url(url_or_endpoint)
+        url = self._resolve_url(endpoint)
         return Client.__build_request("POST", url, json=payload, **kwargs)
 
     def _build_put_request(
-        self, url_or_endpoint, payload, unique_id=None, etag=None, **kwargs
+        self, endpoint, payload, unique_id=None, etag=None, **kwargs
     ):
         self.__validate()
-        url = self._resolve_url(url_or_endpoint, payload, unique_id, id_required=True)
+        url = self._resolve_url(endpoint, payload, unique_id, id_required=True)
         headers = self._resolve_ifmatch_header(payload, etag)
         json = self._purge_meta_fields(payload)
         return Client.__build_request("PUT", url, json=json, headers=headers, **kwargs)
 
     def _build_patch_request(
-        self, url_or_endpoint, payload, unique_id=None, etag=None, **kwargs
+        self, endpoint, payload, unique_id=None, etag=None, **kwargs
     ):
         self.__validate()
-        url = self._resolve_url(url_or_endpoint, payload, unique_id, id_required=True)
+        url = self._resolve_url(endpoint, payload, unique_id, id_required=True)
         headers = self._resolve_ifmatch_header(payload, etag)
         json = self._purge_meta_fields(payload)
         return Client.__build_request(
@@ -199,34 +191,27 @@ class Client:
         )
 
     def _build_delete_request(
-        self, url_or_endpoint, payload=None, unique_id=None, etag=None, **kwargs
+        self, endpoint, payload=None, unique_id=None, etag=None, **kwargs
     ):
         self.__validate()
         url = self._resolve_url(
-            url_or_endpoint, payload=payload, unique_id=unique_id, id_required=True
+            endpoint, payload=payload, unique_id=unique_id, id_required=True
         )
         headers = self._resolve_ifmatch_header(payload=payload, etag=etag)
         return Client.__build_request("DELETE", url, headers=headers, **kwargs)
 
     def _build_get_request(
-        self, url_or_endpoint, etag=None, unique_id=None, payload=None, **kwargs
+        self, endpoint, etag=None, unique_id=None, payload=None, **kwargs
     ):
         self.__validate()
-        url = self._resolve_url(url_or_endpoint, payload=payload, unique_id=unique_id)
+        url = self._resolve_url(endpoint, payload=payload, unique_id=unique_id)
         if payload or etag:
             headers = self._resolve_if_none_match_header(etag=etag, payload=payload)
         else:
             headers = None
         return Client.__build_request("GET", url, headers=headers, **kwargs)
 
-    def _resolve_url(
-        self, url_or_endpoint, payload=None, unique_id=None, id_required=False
-    ):
-        if url_or_endpoint in self.settings.endpoints:
-            endpoint = self.settings.endpoints[url_or_endpoint]
-        else:
-            endpoint = url_or_endpoint
-
+    def _resolve_url(self, endpoint, payload=None, unique_id=None, id_required=False):
         if unique_id:
             endpoint = "/".join([endpoint, unique_id])
         elif payload and self.settings.id_field in payload:

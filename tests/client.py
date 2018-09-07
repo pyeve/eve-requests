@@ -8,7 +8,6 @@ def test_client_session_is_set_at_startup():
     client = Client()
     assert client.session is not None
 
-
 def test_client_default_settings_are_set_at_startup():
     client = Client()
     assert isinstance(client.settings, Settings)
@@ -42,16 +41,13 @@ def test_resolve_url():
         == "https://myapi/endpoint/id"
     )
 
-    client.settings.endpoints["contacts"] = "people"
-    assert client._resolve_url("contacts") == "https://myapi/people"
-
     assert client._resolve_url(None) == "https://myapi"
 
     assert (
         client._resolve_url("contacts", {client.settings.id_field: "id"})
-        == "https://myapi/people/id"
+        == "https://myapi/contacts/id"
     )
-    assert client._resolve_url("contacts", {"key": "value"}) == "https://myapi/people"
+    assert client._resolve_url("contacts", {"key": "value"}) == "https://myapi/contacts"
 
     client.settings.base_url = None
     assert client._resolve_url(None) is None
@@ -137,9 +133,8 @@ def test_purge_meta_fields():
 
 def test_post_method():
     client = Client()
-    client.settings.endpoints["test"] = "people"
-    req = client._build_post_request("test", {"key": "value"}, auth={"user", "pw"})
-    assert req.url == "http://localhost:5000/people"
+    req = client._build_post_request("foo", {"key": "value"}, auth={"user", "pw"})
+    assert req.url == "http://localhost:5000/foo"
     assert req.json["key"] == "value"
     assert req.auth == set(["user", "pw"])
 
@@ -151,13 +146,12 @@ def test_post_method():
 
 def test_put_method():
     client = Client()
-    client.settings.endpoints["test"] = "people"
     req = client._build_put_request(
-        "test",
+        "foo",
         {client.settings.id_field: "id", client.settings.etag: "etag", "key": "value"},
         auth={"user", "pw"},
     )
-    assert req.url == "http://localhost:5000/people/id"
+    assert req.url == "http://localhost:5000/foo/id"
     assert req.json["key"] == "value"
     assert req.headers["If-Match"] == "etag"
     assert req.auth == set(["user", "pw"])
@@ -179,13 +173,12 @@ def test_put_method():
 
 def test_patch_method():
     client = Client()
-    client.settings.endpoints["test"] = "people"
     req = client._build_patch_request(
-        "test",
+        "foo",
         {client.settings.id_field: "id", client.settings.etag: "etag", "key": "value"},
         auth={"user", "pw"},
     )
-    assert req.url == "http://localhost:5000/people/id"
+    assert req.url == "http://localhost:5000/foo/id"
     assert req.json["key"] == "value"
     assert req.headers["If-Match"] == "etag"
     assert req.auth == set(["user", "pw"])
@@ -207,25 +200,24 @@ def test_patch_method():
 
 def test_delete_method():
     client = Client()
-    client.settings.endpoints["test"] = "people"
-    req = client._build_delete_request("test", None, "id", "etag", auth={"user", "pw"})
-    assert req.url == "http://localhost:5000/people/id"
+    req = client._build_delete_request("foo", None, "id", "etag", auth={"user", "pw"})
+    assert req.url == "http://localhost:5000/foo/id"
     assert req.headers["If-Match"] == "etag"
     assert req.auth == set(["user", "pw"])
 
     req = client._build_delete_request(
-        "test", {client.settings.etag: "etag"}, "id", auth={"user", "pw"}
+        "foo", {client.settings.etag: "etag"}, "id", auth={"user", "pw"}
     )
-    assert req.url == "http://localhost:5000/people/id"
+    assert req.url == "http://localhost:5000/foo/id"
     assert req.headers["If-Match"] == "etag"
     assert req.auth == set(["user", "pw"])
 
     req = client._build_delete_request(
-        "test",
+        "foo",
         {client.settings.etag: "etag", client.settings.id_field: "id"},
         auth={"user", "pw"},
     )
-    assert req.url == "http://localhost:5000/people/id"
+    assert req.url == "http://localhost:5000/foo/id"
     assert req.headers["If-Match"] == "etag"
     assert req.auth == set(["user", "pw"])
 
@@ -241,15 +233,14 @@ def test_delete_method():
 
 def test_get_method():
     client = Client()
-    client.settings.endpoints["test"] = "people"
 
-    req = client._build_get_request("test")
-    assert req.url == "http://localhost:5000/people"
+    req = client._build_get_request("foo")
+    assert req.url == "http://localhost:5000/foo"
 
     req = client._build_get_request(
-        "test", etag="etag", unique_id="id", auth=("user", "pw")
+        "foo", etag="etag", unique_id="id", auth=("user", "pw")
     )
-    assert req.url == "http://localhost:5000/people/id"
+    assert req.url == "http://localhost:5000/foo/id"
     assert req.headers["If-None-Match"] == "etag"
     assert req.auth == tuple(["user", "pw"])
 

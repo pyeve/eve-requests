@@ -38,11 +38,6 @@ class Settings:
     def __init__(self, base_url="http://localhost:5000"):
         """
         """
-        #: A :obj:`dict` mapping endpoints to actual urls.
-        #: Example: ``{"contacts": "people"}`` would map the contacts endpoint to the people url.
-        #: Defaults to ``{}``.
-        self.endpoints = {}
-
         #: Remote service base url or entry point (the home page).
         self.base_url = base_url
 
