@@ -8,6 +8,7 @@ def test_client_session_is_set_at_startup():
     client = Client()
     assert client.session is not None
 
+
 def test_client_default_settings_are_set_at_startup():
     client = Client()
     assert isinstance(client.settings, Settings)
@@ -115,20 +116,6 @@ def test_resolve_if_none_match_header():
         client._resolve_if_none_match_header({client.settings.etag: "hash"}, "etag")
         is None
     )
-
-
-def test_purge_meta_fields():
-    client = Client()
-    payload = {meta_field: "value" for meta_field in client.settings.meta_fields}
-    payload["key"] = "value"
-
-    challenge = client._purge_meta_fields(payload)
-    assert "key" in challenge
-    for field in client.settings.meta_fields:
-        assert field not in challenge
-
-    # original has not been affected
-    assert client.settings.meta_fields[0] in payload
 
 
 def test_post_method():

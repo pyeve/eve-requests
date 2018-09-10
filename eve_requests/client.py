@@ -5,6 +5,7 @@ from requests import Request
 import requests
 
 from .server import Settings
+from .utils import purge_document
 
 
 class Client:
@@ -176,7 +177,7 @@ class Client:
         self.__validate()
         url = self._resolve_url(endpoint, payload, unique_id, id_required=True)
         headers = self._resolve_ifmatch_header(payload, etag)
-        json = self._purge_meta_fields(payload)
+        json = purge_document(payload)
         return Client.__build_request("PUT", url, json=json, headers=headers, **kwargs)
 
     def _build_patch_request(
@@ -185,7 +186,7 @@ class Client:
         self.__validate()
         url = self._resolve_url(endpoint, payload, unique_id, id_required=True)
         headers = self._resolve_ifmatch_header(payload, etag)
-        json = self._purge_meta_fields(payload)
+        json = purge_document(payload)
         return Client.__build_request(
             "PATCH", url, json=json, headers=headers, **kwargs
         )
@@ -240,13 +241,6 @@ class Client:
             return payload[self.settings.etag]
 
         raise ValueError("ETag is required")
-
-    def _purge_meta_fields(self, payload):
-        return {
-            key: value
-            for (key, value) in payload.items()
-            if key not in self.settings.meta_fields
-        }
 
     def _prepare_and_send_request(self, request):
         request = self.session.prepare_request(request)

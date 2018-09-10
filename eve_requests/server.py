@@ -79,18 +79,10 @@ class Settings:
         #: setting`. Defaults to ``_links``.
         self.links = "_links"
 
-        self._meta_fields = [
-            self.etag,
-            self.created,
-            self.updated,
-            self.id_field,
-            self.links,
-        ]
-
     @property
     def meta_fields(self):
         """List of remote meta fields handled automatically by the service. """
-        return self._meta_fields
+        return [self.etag, self.created, self.updated, self.id_field, self.links]
 
     @staticmethod
     def from_url(url):
